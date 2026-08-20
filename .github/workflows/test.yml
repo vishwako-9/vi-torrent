@@ -1,0 +1,46 @@
+name: test
+
+# A genuinely clean machine, which is the point: the development box has Bun,
+# Node, npm and a warm node_modules, so it cannot prove that a stranger's
+# install works. Two of the three real bugs found before release - npm
+# installing silently, and node-datachannel's binary never being fetched -
+# were invisible locally and only showed up on a cold install.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# Only one run per branch. Without this, pushing again while a run is in
+# flight leaves the old one hanging until it is cancelled by hand - and a
+# burst of overlapping runs is part of what automated abuse detection looks
+# at. `cancel-in-progress` supersedes the previous run cleanly instead.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # No --frozen-lockfile: this must exercise the same path a new user
+      # takes, including the preinstall guard and the trustedDependencies
+      # script that fetches the WebRTC binary.
+      - name: Install
+        run: bun install
+
+      - name: The WebRTC native binary must actually be present
+        shell: bash
+        run: |
+          test -f node_modules/node-datachannel/build/Release/node_datachannel.node \
+            || { echo "node-datachannel binary missing - trustedDependencies regressed"; exit 1; }
+
+      - name: Test
+        run: bun run test

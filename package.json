@@ -1,0 +1,70 @@
+{
+  "name": "@vishwanko-9/vi-torrent",
+  "version": "0.5.1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "A BitTorrent client that lives in the terminal, built on @opentui + SolidJS + WebTorrent, running on Bun.",
+  "license": "MIT",
+  "author": "vishwako-9",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vishwako-9/vi-torrent.git"
+  },
+  "homepage": "https://github.com/vishwako-9/vi-torrent#readme",
+  "bugs": {
+    "url": "https://github.com/vishwako-9/vi-torrent/issues"
+  },
+  "type": "module",
+  "bin": {
+    "vi-torrent": "dist/index.js"
+  },
+  "//files": "Ships the BUILT dist/, not raw src/. Bun ignores a package's tsconfig.json for files under node_modules - it assumes a published package is already compiled - so publishing .tsx meant a global install died instantly with \"Cannot find module 'react/jsx-dev-runtime'\". Verified by installing the real tarball globally. The 4 screenshots are listed individually rather than shipping the whole docs/ folder - the README needs only these, and the rest of docs/ is markdown nobody installing the package needs bundled.",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "docs/screenshot.png",
+    "docs/screenshot-add.png",
+    "docs/screenshot-done.png",
+    "docs/screenshot-settings.png"
+  ],
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "keywords": [
+    "bittorrent",
+    "torrent",
+    "tui",
+    "terminal",
+    "webtorrent",
+    "opentui"
+  ],
+  "//preinstall": "npm installs this happily and says nothing, then `npm start` dies with a bare 'bun is not recognized'. engines.bun does not help - npm only validates the node and npm keys, even with engine-strict. This stops it at the first command instead, with a message that names the actual requirement. It must invoke bun rather than node: bun ships no node shim, so anyone who followed the README has bun and no node.",
+  "scripts": {
+    "preinstall": "bun --version || (echo vi-torrent needs Bun, not Node - install it from https://bun.sh and see the README: https://github.com/vishwako-9/vi-torrent#prerequisites && exit 1)",
+    "start": "bun --conditions=browser run src/index.tsx",
+    "dev": "bun --conditions=browser run --watch src/index.tsx",
+    "doctor": "bun run src/doctor.ts",
+    "test": "bun --conditions=browser run tests/run-all.ts",
+    "build": "bun build src/index.tsx src/daemon.ts --outdir dist --target bun --packages external",
+    "prepublishOnly": "bun run build"
+  },
+  "//trustedDependencies": "Bun blocks dependency lifecycle scripts unless listed here. node-datachannel's install script fetches its prebuilt WebRTC binary; without it a fresh `bun install` produces a client that dies on startup with 'Cannot find module build/Release/node_datachannel.node'. Deliberately NOT trusting the rest: bufferutil and utf-8-validate are optional ws speedups, utp-native is an optional webtorrent dependency, and ip-set's preinstall runs `npx only-allow pnpm`, which would fail the install outright.",
+  "trustedDependencies": [
+    "node-datachannel"
+  ],
+  "dependencies": {
+    "@opentui/core": "^0.4.5",
+    "@opentui/solid": "^0.4.5",
+    "solid-js": "^1.9.12",
+    "webtorrent": "^3.0.21"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/webtorrent": "^0.110.1",
+    "typescript": "^7.0.2"
+  },
+  "//platforms": "No os restriction. Windows and Linux are both verified - full suite plus a real launch on each. macOS is UNTESTED (no machine), but uses the same POSIX path as Linux. The old win32 restriction existed because utp-native panics on POSIX under Bun; that is now handled in src/webtorrent-platform.ts by disabling uTP off Windows."
+}

@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+scratch/
+
+# test fixtures generated at runtime
+tests/*.torrent
+
+# written by @opentui/solid's jsx-runtime on a JSX error
+jsx_crash.txt
+
+# throwaway third-party clones for research (some GPL/LGPL, study only,
+# never a dependency) - the write-ups live in research/docs/, tracked
+research/ascii-animation-study/
+research/codemie-opencode-src/
+research/opentui-src/
